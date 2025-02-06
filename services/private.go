@@ -33,6 +33,7 @@ func HandleAdminMessage(ctx context.Context, bot *tgbot.Bot, update *models.Upda
 				err := SetModel(command.Arguments[0])
 				if err != nil {
 					sendMessage(SendMessageParams{
+						Ctx:              ctx,
 						Bot:              bot,
 						ChatID:           update.Message.Chat.ID,
 						Message:          err.Error(),
@@ -40,6 +41,7 @@ func HandleAdminMessage(ctx context.Context, bot *tgbot.Bot, update *models.Upda
 					})
 				} else {
 					sendMessage(SendMessageParams{
+						Ctx:              ctx,
 						Bot:              bot,
 						ChatID:           update.Message.Chat.ID,
 						Message:          getMessages().SetModelSuccess(),
