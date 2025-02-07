@@ -243,18 +243,15 @@ func handleBanCommand(ctx context.Context, bot *tgbot.Bot, update *models.Update
 		return
 	}
 
-	var targetUser *models.User
+	var targetMessage *models.Message
 
 	if update.Message.ReplyToMessage != nil {
-		targetUser = update.Message.ReplyToMessage.From
+		targetMessage = update.Message.ReplyToMessage
 	} else {
 		return
 	}
 	if member.Type == models.ChatMemberTypeAdministrator || member.Type == models.ChatMemberTypeOwner {
-		success, err := bot.BanChatMember(ctx, &tgbot.BanChatMemberParams{
-			ChatID: update.Message.Chat.ID,
-			UserID: targetUser.ID,
-		})
+		err := banMember(ctx, bot, *targetMessage)
 		if err != nil {
 			sendMessage(SendMessageParams{
 				Ctx:              ctx,
@@ -264,12 +261,12 @@ func handleBanCommand(ctx context.Context, bot *tgbot.Bot, update *models.Update
 				ReplyToMessageID: update.Message.ID,
 			})
 			utils.LogError(err)
-		} else if success {
+		} else {
 			sendMessage(SendMessageParams{
 				Ctx:              ctx,
 				Bot:              bot,
 				ChatID:           update.Message.Chat.ID,
-				Message:          getMessages().BanUserMessage(getUserName(targetUser)),
+				Message:          getMessages().BanUserMessage(getUserName(targetMessage.From)),
 				ReplyToMessageID: update.Message.ID,
 			})
 		}
@@ -278,7 +275,7 @@ func handleBanCommand(ctx context.Context, bot *tgbot.Bot, update *models.Update
 		f := false
 		poll, err := bot.SendPoll(ctx, &tgbot.SendPollParams{
 			ChatID:   update.Message.Chat.ID,
-			Question: getMessages().BanUserPollTitle(getUserName(targetUser)),
+			Question: getMessages().BanUserPollTitle(getUserName(targetMessage.From)),
 			Options: []models.InputPollOption{
 				{Text: getMessages().BanUserPollAgree()},
 				{Text: getMessages().BanUserPollDisagree()},
@@ -296,10 +293,7 @@ func handleBanCommand(ctx context.Context, bot *tgbot.Bot, update *models.Update
 				v := poll.Options[0].VoterCount
 				v -= poll.Options[1].VoterCount
 				if v >= minAgreeVotes {
-					success, err := bot.BanChatMember(ctx, &tgbot.BanChatMemberParams{
-						ChatID: update.Message.Chat.ID,
-						UserID: targetUser.ID,
-					})
+					err := banMember(ctx, bot, *targetMessage)
 					if err != nil {
 						sendMessage(SendMessageParams{
 							Ctx:     ctx,
@@ -308,12 +302,12 @@ func handleBanCommand(ctx context.Context, bot *tgbot.Bot, update *models.Update
 							Message: "Error: " + err.Error(),
 						})
 						utils.LogError(err)
-					} else if success {
+					} else {
 						sendMessage(SendMessageParams{
 							Ctx:     ctx,
 							Bot:     bot,
 							ChatID:  update.Message.Chat.ID,
-							Message: getMessages().BanUserMessage(getUserName(targetUser)),
+							Message: getMessages().BanUserMessage(getUserName(targetMessage.From)),
 						})
 					}
 					return true
@@ -408,4 +402,24 @@ func findImages(ctx context.Context, bot *tgbot.Bot, update *models.Update) []st
 		}
 	}
 	return images
+}
+
+// banMember bans a member from the chat. User who is not anonymous will be banned by their ID, otherwise by their sender chat ID.
+func banMember(ctx context.Context, bot *tgbot.Bot, message models.Message) error {
+	member := message.From
+	chatID := message.Chat.ID
+	isAnonymous := member.Username == "Channel_Bot"
+	if !isAnonymous {
+		_, err := bot.BanChatMember(ctx, &tgbot.BanChatMemberParams{
+			ChatID: chatID,
+			UserID: member.ID,
+		})
+		return err
+	} else {
+		_, err := bot.BanChatSenderChat(ctx, &tgbot.BanChatSenderChatParams{
+			ChatID:       chatID,
+			SenderChatID: int(message.SenderChat.ID),
+		})
+		return err
+	}
 }

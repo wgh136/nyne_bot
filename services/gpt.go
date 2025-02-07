@@ -76,7 +76,7 @@ func GptReply(bot *tgbot.Bot, newMessage GptMessage, chatID int64, replyToMessag
 			Ctx:              ctx,
 			Bot:              bot,
 			ChatID:           chatID,
-			Message:          tgbot.EscapeMarkdown(chatHistory[len(chatHistory)-1].Content[0].Text),
+			Message:          tgbot.EscapeMarkdownUnescaped(chatHistory[len(chatHistory)-1].Content[0].Text),
 			ReplyToMessageID: replyToMessageID,
 			ParseMode:        models.ParseModeMarkdown,
 		})
