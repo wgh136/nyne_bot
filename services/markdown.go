@@ -80,6 +80,15 @@ func renderNormal(line string) string {
 				i = next
 			}
 		} else if c == '~' && !isEscaped {
+			if (i + 1) < len(runes) {
+				nextChar := runes[i+1]
+				if nextChar == ' ' {
+					// Do not render strikethrough if there is a space after ~
+					// ~ could be a punctuation
+					cache.WriteString("\\~")
+					continue
+				}
+			}
 			next := findNextSymbol(line, '~', i+1)
 			if next == -1 {
 				cache.WriteString("\\~")
