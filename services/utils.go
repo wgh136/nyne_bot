@@ -79,3 +79,11 @@ func getUserName(user *models.User) string {
 		return user.FirstName + splitter + user.LastName
 	}
 }
+
+func getUserNameFromMessage(message *models.Message) string {
+	if message.SenderChat != nil {
+		return "@" + message.SenderChat.Username
+	} else {
+		return getUserName(message.From)
+	}
+}

@@ -266,7 +266,7 @@ func handleBanCommand(ctx context.Context, bot *tgbot.Bot, update *models.Update
 				Ctx:              ctx,
 				Bot:              bot,
 				ChatID:           update.Message.Chat.ID,
-				Message:          getMessages().BanUserMessage(getUserName(targetMessage.From)),
+				Message:          getMessages().BanUserMessage(getUserNameFromMessage(targetMessage)),
 				ReplyToMessageID: update.Message.ID,
 			})
 		}
@@ -307,7 +307,7 @@ func handleBanCommand(ctx context.Context, bot *tgbot.Bot, update *models.Update
 							Ctx:     ctx,
 							Bot:     bot,
 							ChatID:  update.Message.Chat.ID,
-							Message: getMessages().BanUserMessage(getUserName(targetMessage.From)),
+							Message: getMessages().BanUserMessage(getUserNameFromMessage(targetMessage)),
 						})
 					}
 					return true
