@@ -275,7 +275,7 @@ func handleBanCommand(ctx context.Context, bot *tgbot.Bot, update *models.Update
 		f := false
 		poll, err := bot.SendPoll(ctx, &tgbot.SendPollParams{
 			ChatID:   update.Message.Chat.ID,
-			Question: getMessages().BanUserPollTitle(getUserName(targetMessage.From)),
+			Question: getMessages().BanUserPollTitle(getUserNameFromMessage(targetMessage)),
 			Options: []models.InputPollOption{
 				{Text: getMessages().BanUserPollAgree()},
 				{Text: getMessages().BanUserPollDisagree()},
