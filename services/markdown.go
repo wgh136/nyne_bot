@@ -12,6 +12,7 @@ func RenderMarkdown(text string) string {
 	for _, line := range strings.Split(text, "\n") {
 		if strings.HasPrefix(line, "```") {
 			builder.WriteString(line)
+			builder.WriteRune('\n')
 			isCode = !isCode
 			continue
 		}
