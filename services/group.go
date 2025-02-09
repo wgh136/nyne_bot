@@ -17,7 +17,7 @@ var (
 )
 
 const (
-	minAgreeVotes = 3
+	minAgreeVotes = 5
 )
 
 func HandleGroupMessage(ctx context.Context, bot *tgbot.Bot, update *models.Update) {
@@ -287,12 +287,18 @@ func handleBanCommand(ctx context.Context, bot *tgbot.Bot, update *models.Update
 			utils.LogError(err)
 			return
 		}
+		pollID := poll.ID
 		polls = append(polls, PollStatus{
 			Poll: poll.Poll,
 			Check: func(poll *models.Poll, uid int64, answer int) bool {
 				v := poll.Options[0].VoterCount
 				v -= poll.Options[1].VoterCount
 				if v >= minAgreeVotes {
+					_, err = bot.StopPoll(ctx, &tgbot.StopPollParams{
+						ChatID:    update.Message.Chat.ID,
+						MessageID: pollID,
+					})
+					utils.LogError(err)
 					err := banMember(ctx, bot, *targetMessage)
 					if err != nil {
 						sendMessage(SendMessageParams{

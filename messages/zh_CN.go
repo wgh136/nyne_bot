@@ -11,7 +11,7 @@ func (b _BotMessagesZhCN) BanUserMessage(username string) string {
 }
 
 func (b _BotMessagesZhCN) BanUserPollTitle(username string) string {
-	return "是否封禁用户 " + username + "?"
+	return "是否封禁用户 " + username + "? " + "需要 同意 - 反对 >= 5"
 }
 
 func (b _BotMessagesZhCN) BanUserPollAgree() string {
@@ -19,7 +19,7 @@ func (b _BotMessagesZhCN) BanUserPollAgree() string {
 }
 
 func (b _BotMessagesZhCN) BanUserPollDisagree() string {
-	return "不同意"
+	return "反对"
 }
 
 func (b _BotMessagesZhCN) ModelNotFound(modelName string) string {
