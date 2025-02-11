@@ -73,7 +73,7 @@ func handleNewMember(ctx context.Context, bot *tgbot.Bot, user *models.User, cha
 	f := false
 	pollMsg, err := bot.SendPoll(ctx, &tgbot.SendPollParams{
 		ChatID:          chatID,
-		Question:        getMessages().JoinGroupQuestionPrefix(user.Username) + q.Question,
+		Question:        getMessages().JoinGroupQuestionPrefix(getUserName(user)) + q.Question,
 		Options:         options,
 		OpenPeriod:      120,
 		Type:            "quiz",
@@ -143,6 +143,18 @@ func handleNewMember(ctx context.Context, bot *tgbot.Bot, user *models.User, cha
 					MessageID: pollMsg.ID,
 				})
 				utils.LogError(err)
+				_, err = bot.BanChatMember(ctx, &tgbot.BanChatMemberParams{
+					ChatID:    chatID,
+					UserID:    user.ID,
+					UntilDate: int(time.Now().Add(5 * time.Minute).Unix()),
+				})
+				utils.LogError(err)
+				sendMessage(SendMessageParams{
+					Ctx:     ctx,
+					Bot:     bot,
+					ChatID:  chatID,
+					Message: getMessages().UserAnswerQuestionTimeout(getUserName(user)),
+				})
 				polls = append(polls[:i], polls[i+1:]...)
 				break
 			}

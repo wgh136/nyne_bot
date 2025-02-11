@@ -35,9 +35,9 @@ func (b _BotMessagesZhCN) JoinGroupQuestionPrefix(username string) string {
 }
 
 func (b _BotMessagesZhCN) UserFailedToAnswerQuestion(username string) string {
-	return username + " 加入群组失败"
+	return username + " 回答问题错误, 加入群组失败"
 }
 
 func (b _BotMessagesZhCN) UserAnswerQuestionTimeout(username string) string {
-	return username + " 没有即使回答问题"
+	return username + " 没有及时回答问题"
 }
