@@ -9,16 +9,30 @@ import (
 	"nyne_bot/config"
 	"nyne_bot/utils"
 	"strings"
+	"sync"
 	"time"
 )
 
 var (
 	polls []PollStatus
+	lock  = sync.Mutex{}
 )
 
 const (
 	minAgreeVotes = 5
 )
+
+func removePollAt(index int) {
+	lock.Lock()
+	polls = append(polls[:index], polls[index+1:]...)
+	lock.Unlock()
+}
+
+func addPoll(p PollStatus) {
+	lock.Lock()
+	polls = append(polls, p)
+	lock.Unlock()
+}
 
 func HandleGroupMessage(ctx context.Context, bot *tgbot.Bot, update *models.Update) {
 	if HandleNewMember(ctx, bot, update) {
@@ -84,7 +98,7 @@ func handleNewMember(ctx context.Context, bot *tgbot.Bot, user *models.User, cha
 		utils.LogError(err)
 		return
 	}
-	polls = append(polls, PollStatus{
+	addPoll(PollStatus{
 		Poll: pollMsg.Poll,
 		Check: func(poll *models.Poll, uid int64, answer int) bool {
 			if uid != user.ID {
@@ -155,7 +169,7 @@ func handleNewMember(ctx context.Context, bot *tgbot.Bot, user *models.User, cha
 					ChatID:  chatID,
 					Message: getMessages().UserAnswerQuestionTimeout(getUserName(user)),
 				})
-				polls = append(polls[:i], polls[i+1:]...)
+				removePollAt(i)
 				break
 			}
 		}
@@ -172,7 +186,7 @@ func HandlePollUpdate(_ context.Context, _ *tgbot.Bot, update *models.Update) bo
 			poll.Poll.Options[answer].VoterCount++
 			poll.Poll.TotalVoterCount++
 			if poll.Check(poll.Poll, update.PollAnswer.User.ID, answer) {
-				polls = append(polls[:i], polls[i+1:]...)
+				removePollAt(i)
 			}
 			break
 		}
@@ -300,7 +314,7 @@ func handleBanCommand(ctx context.Context, bot *tgbot.Bot, update *models.Update
 			return
 		}
 		pollID := poll.ID
-		polls = append(polls, PollStatus{
+		addPoll(PollStatus{
 			Poll: poll.Poll,
 			Check: func(poll *models.Poll, uid int64, answer int) bool {
 				v := poll.Options[0].VoterCount
@@ -337,7 +351,7 @@ func handleBanCommand(ctx context.Context, bot *tgbot.Bot, update *models.Update
 			time.Sleep(10 * time.Minute)
 			for i, p := range polls {
 				if p.Poll.ID == poll.Poll.ID {
-					polls = append(polls[:i], polls[i+1:]...)
+					removePollAt(i)
 					break
 				}
 			}
